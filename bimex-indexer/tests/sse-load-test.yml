@@ -1,0 +1,15 @@
+config:
+  target: "http://localhost:3002"
+  phases:
+    - duration: 10
+      arrivalRate: 2
+      name: "Attempting multiple SSE connections"
+  engines:
+    sse: {}
+
+scenarios:
+  - name: "SSE Connection Limit Test"
+    engine: sse
+    flow:
+      - connect: "/sse"
+      - think: 5

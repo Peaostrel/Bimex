@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="{{locale}}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Reporte Mensual - Bimex</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F9FAFB; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F9FAFB; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(30, 58, 95, 0.08);">
+
+          <!-- ── HEADER ── -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1E3A5F 0%, #2D5282 100%); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.02em;">Bimex</h1>
+              <p style="margin: 16px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.8); font-weight: 500;">{{header}} — {{mes}} {{ano}}</p>
+            </td>
+          </tr>
+
+          <!-- ── BODY ── -->
+          <tr>
+            <td style="padding: 40px;">
+
+              <!-- Greeting -->
+              <p style="margin: 0 0 24px; font-size: 16px; color: #374151; line-height: 1.6;">
+                {{greeting}}
+              </p>
+
+              <!-- ── SUMMARY CARD ── -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 2px solid #BFDBFE; border-radius: 12px; margin-bottom: 32px;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <p style="margin: 0 0 16px; font-size: 13px; font-weight: 700; color: #1E40AF; text-transform: uppercase; letter-spacing: 0.08em; text-align: center;">
+                      {{summaryTitle}}
+                    </p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 10px 0; border-top: 1px solid rgba(30, 64, 175, 0.12); width: 50%;">
+                          <p style="margin: 0 0 4px; font-size: 12px; color: #3B82F6; font-weight: 500;">{{totalContribuido}}</p>
+                          <p style="margin: 0; font-size: 20px; font-weight: 700; color: #1E3A5F;">{{totalContribuidoValor}}</p>
+                        </td>
+                        <td style="padding: 10px 0; border-top: 1px solid rgba(30, 64, 175, 0.12); width: 50%; text-align: right;">
+                          <p style="margin: 0 0 4px; font-size: 12px; color: #3B82F6; font-weight: 500;">{{yieldEsteMes}}</p>
+                          <p style="margin: 0; font-size: 20px; font-weight: 700; color: #059669;">+{{yieldEsteMesValor}}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0; border-top: 1px solid rgba(30, 64, 175, 0.12); width: 50%;">
+                          <p style="margin: 0 0 4px; font-size: 12px; color: #3B82F6; font-weight: 500;">{{yieldAcumulado}}</p>
+                          <p style="margin: 0; font-size: 20px; font-weight: 700; color: #1E3A5F;">{{yieldAcumuladoValor}}</p>
+                        </td>
+                        <td style="padding: 10px 0; border-top: 1px solid rgba(30, 64, 175, 0.12); width: 50%; text-align: right;">
+                          <p style="margin: 0 0 4px; font-size: 12px; color: #3B82F6; font-weight: 500;">{{proyectosApoyados}}</p>
+                          <p style="margin: 0; font-size: 20px; font-weight: 700; color: #1E3A5F;">{{numProyectos}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- ── PROJECTS LIST ── -->
+              <h2 style="margin: 0 0 16px; font-size: 18px; font-weight: 700; color: #1E3A5F;">
+                {{proyectosTitle}}
+              </h2>
+
+              {{proyectosLista}}
+
+              <!-- ── TRUST MESSAGE ── -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; margin: 32px 0;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width: 32px; vertical-align: top; padding-right: 12px;">
+                          <span style="font-size: 20px;">🛡️</span>
+                        </td>
+                        <td>
+                          <p style="margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #166534;">{{trustTitle}}</p>
+                          <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.6;">{{trustMessage}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- ── CTA ── -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding: 8px 0;">
+                    <a href="{{ctaExplorarUrl}}" style="display: inline-block; padding: 14px 32px; margin-bottom: 12px; background: linear-gradient(135deg, #1E3A5F 0%, #2D5282 100%); color: #FFFFFF; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);">
+                      {{ctaExplorar}} →
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding: 0 0 8px;">
+                    <a href="{{ctaCompartirUrl}}" style="display: inline-block; padding: 12px 28px; background: transparent; color: #1E3A5F; text-decoration: none; border: 2px solid #1E3A5F; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                      {{ctaCompartir}}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ── FOOTER ── -->
+          <tr>
+            <td style="padding: 24px 40px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB;">
+              <p style="margin: 0 0 12px; font-size: 12px; color: #6B7280; text-align: center; line-height: 1.6;">
+                {{footerSent}}
+              </p>
+              <p style="margin: 0 0 12px; font-size: 12px; color: #9CA3AF; text-align: center; line-height: 1.6;">
+                {{totalContribuidoValor}} {{mxneLabel}} · {{numProyectos}} {{proyectosText}}
+              </p>
+              <p style="margin: 0; font-size: 12px; text-align: center;">
+                <a href="{{baseUrl}}/terminos" style="color: #1E3A5F; text-decoration: none; font-weight: 500;">{{footerTerms}}</a>
+                <span style="color: #D1D5DB; margin: 0 8px;">·</span>
+                <a href="{{baseUrl}}/privacidad" style="color: #1E3A5F; text-decoration: none; font-weight: 500;">{{footerPrivacy}}</a>
+                <span style="color: #D1D5DB; margin: 0 8px;">·</span>
+                <a href="{{unsubscribeUrl}}" style="color: #6B7280; text-decoration: none;">{{footerUnsubscribe}}</a>
+              </p>
+              <p style="margin: 12px 0 0; font-size: 11px; color: #D1D5DB; text-align: center;">
+                &copy; {{ano}} {{footerRights}}
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

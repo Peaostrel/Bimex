@@ -110,12 +110,15 @@ export default function ListaProyectos({ onCrear, refrescar }) {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { cargar(); }, [cargar, refrescar]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setVisibles(12); }, [filtro]);
   useEffect(() => {
     const timer = setTimeout(() => setBusquedaDebounced(textoBusqueda), 300);
     return () => clearTimeout(timer);
   }, [textoBusqueda]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setVisibles(12); }, [busquedaDebounced]);
 
   useEffect(() => {

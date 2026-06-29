@@ -59,7 +59,7 @@ test.describe('Golden Path – flujo completo connect wallet → invertir → yi
     })
     await page.goto('/')
 
-    const heroBtn = page.getByRole('button', { name: /conectar con freighter/i }).first()
+    const heroBtn = page.getByRole('button', { name: /freighter/i }).first()
     await expect(heroBtn).toBeVisible({ timeout: 10_000 })
 
     const navBtn = page.getByRole('button', { name: /^conectar$/i })

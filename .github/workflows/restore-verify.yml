@@ -1,0 +1,61 @@
+name: Weekly Restore Verification
+
+on:
+  schedule:
+    # Every Monday at 04:00 UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      backup_file:
+        description: 'Specific backup file to verify (leave empty for latest)'
+        required: false
+        type: string
+
+jobs:
+  restore-verify:
+    name: Restore and Validate Backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client gnupg awscli docker.io
+          gpg --version
+          psql --version
+          aws --version
+          docker --version
+
+      - name: Start Docker service
+        run: |
+          sudo systemctl start docker || true
+          docker info
+
+      - name: Run restore verification
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_REGION: auto
+          BACKUP_FILE: ${{ inputs.backup_file || '' }}
+        run: |
+          bash scripts/restore-verify.sh
+
+      - name: Restore verification succeeded
+        if: success()
+        run: |
+          echo "✅ Restore verification PASSED — backup is valid and restorable."
+
+      - name: Restore verification failed
+        if: failure()
+        run: |
+          echo "❌ Restore verification FAILED — backup is corrupt or unrecoverable."
+          echo "   Check the logs above for details."
+          echo "   Trigger a new backup immediately if needed."

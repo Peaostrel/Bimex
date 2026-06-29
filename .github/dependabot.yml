@@ -1,0 +1,57 @@
+version: 2
+updates:
+  # Frontend React (Vite)
+  - package-ecosystem: npm
+    directory: /bimex-frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - frontend
+    groups:
+      frontend-dependencies:
+        patterns:
+          - "*"
+
+  # Indexer Node.js
+  - package-ecosystem: npm
+    directory: /bimex-indexer
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - indexer
+    groups:
+      indexer-dependencies:
+        patterns:
+          - "*"
+
+  # Smart contract Rust/Soroban
+  - package-ecosystem: cargo
+    directory: /bimex
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - contract
+    groups:
+      cargo-dependencies:
+        patterns:
+          - "*"
+
+  # GitHub Actions used by the workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci
+    groups:
+      actions-dependencies:
+        patterns:
+          - "*"

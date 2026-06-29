@@ -63,8 +63,8 @@ export default function OnboardingTour({ isActive, onComplete }) {
       const rect = targetElement.getBoundingClientRect();
       const tooltipRect = tooltipRef.current?.getBoundingClientRect() || { width: 320, height: 200 };
 
-      let top = 0;
-      let left = 0;
+      let top;
+      let left;
 
       switch (step.placement) {
         case "bottom":

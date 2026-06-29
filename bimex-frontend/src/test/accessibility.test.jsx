@@ -28,6 +28,10 @@ vi.mock('@stellar/freighter-api', () => ({
   setAllowed: vi.fn(),
 }));
 
+vi.mock('passkey-kit', () => ({
+  PasskeyKit: class { sign = vi.fn() }
+}));
+
 import { render, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import { MemoryRouter } from 'react-router-dom';

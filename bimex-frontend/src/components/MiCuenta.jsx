@@ -42,7 +42,7 @@ function pct(aportado, meta) {
 }
 
 function puedeRetirar(estado) {
-  return estado === "Liberado" || estado === "Abandonado";
+  return estado === "EtapaInicial" || estado === "EnProgreso" || estado === "Liberado" || estado === "Abandonado";
 }
 
 function escaparCSV(valor) {

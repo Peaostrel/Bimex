@@ -503,7 +503,7 @@ fn test_vul06_continuar_resetea_timestamp() {
 
 /// VUL-07: double withdrawal prevented
 #[test]
-#[should_panic(expected = "Solo puedes retirar cuando el proyecto este liberado, abandonado o haya vencido el plazo")]
+#[should_panic(expected = "No tienes aportacion en este proyecto")]
 fn test_vul07_no_doble_retiro() {
     let (env, cliente, _admin, dueno, backer) = setup();
     let id = cliente.crear_proyecto(&dueno, &String::from_str(&env, "Test"), &100_000_000i128, &doc_cid_vacio(&env), &6u32);
@@ -526,18 +526,17 @@ fn test_vul08_no_contribuir_en_revision() {
     cliente.contribuir(&backer, &id, &10_000_000i128);
 }
 
-/// VUL-09: retirar_principal rejected on EnProgreso state before vencimiento
+/// VUL-09: retirar_principal allowed on EnProgreso state under immediate liquidity policy
 #[test]
-#[should_panic(expected = "Solo puedes retirar cuando el proyecto este liberado, abandonado o haya vencido el plazo")]
-fn test_vul09_no_retirar_en_progreso() {
+fn test_vul09_retiro_en_progreso_permitido() {
     let (env, cliente, _admin, dueno, backer) = setup();
     let id = cliente.crear_proyecto(&dueno, &String::from_str(&env, "Test"), &200_000_000i128, &doc_cid_vacio(&env), &6u32);
     cliente.admin_aprobar(&id);
     cliente.contribuir(&backer, &id, &50_000_000i128);
 
     assert_eq!(cliente.obtener_proyecto(&id).estado, EstadoProyecto::EnProgreso);
-    // Plazo no vencido (timestamp=0, vencimiento=PLAZO_6_MESES) → debe panicar
-    cliente.retirar_principal(&backer, &id);
+    let monto = cliente.retirar_principal(&backer, &id);
+    assert_eq!(monto, 50_000_000i128);
 }
 
 // ============================================================
@@ -732,13 +731,13 @@ fn test_contribuir_proyecto_liberado_falla() {
 }
 
 #[test]
-#[should_panic(expected = "Solo puedes retirar cuando el proyecto este liberado, abandonado o haya vencido el plazo")]
-fn test_retirar_principal_en_progreso_falla() {
+fn test_retirar_principal_en_progreso_exito() {
     let (env, cliente, _admin, dueno, backer) = setup();
     let id = cliente.crear_proyecto(&dueno, &String::from_str(&env, "En progreso"), &500_000_000i128, &doc_cid_vacio(&env), &6u32);
     cliente.admin_aprobar(&id);
     cliente.contribuir(&backer, &id, &100_000_000i128);
-    cliente.retirar_principal(&backer, &id);
+    let monto = cliente.retirar_principal(&backer, &id);
+    assert_eq!(monto, 100_000_000i128);
 }
 
 #[test]

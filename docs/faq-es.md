@@ -16,7 +16,7 @@ Aproximadamente **13.45% APY** (9.45% de CETES + 4% de AMM). Ejemplo: 1,000 MXNe
 
 **4. ¿Cuándo puedo retirar mi principal?**
 
-Puedes retirar tu principal cuando el proyecto esté en estado **Liberado** (meta alcanzada) o **Abandonado**. No puedes retirarlo mientras el proyecto está en EnProgreso, para garantizar que el proyecto reciba el rendimiento prometido.
+Tu dinero no está bloqueado — puedes retirar tu principal íntegro en **cualquier momento** que lo desees, sin penalizaciones ni plazos forzosos. Si retiras tu capital mientras el proyecto sigue activo (EnProgreso), únicamente debes saber que el proyecto dejará de recibir el rendimiento mensual que generaba tu aportación. Puedes gestionar tu retiro directamente desde la sección "Mi Inversión".
 
 **5. ¿Necesito saber de blockchain para usar Bimex?**
 

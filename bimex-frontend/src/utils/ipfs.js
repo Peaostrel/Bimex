@@ -49,3 +49,29 @@ export async function subirConFallback(archivo) {
     return { cid: null, fallbackHash, usedFallback: true };
   }
 }
+
+const IPFS_GATEWAY = "https://gateway.pinata.cloud/ipfs";
+
+/** Regex for CIDv0 (Qm…) and CIDv1 (baf…) */
+const CID_RE = /^(Qm[1-9A-HJ-NP-Za-km-z]{44,}|b[a-z2-7]{58,})$/;
+
+export function esCID(valor) {
+  return CID_RE.test(valor?.trim() ?? "");
+}
+
+export function cidAUrl(cid) {
+  return `${IPFS_GATEWAY}/${cid}`;
+}
+
+/**
+ * Parsea doc_hash: "CID1|CID2|CID3" → { cids, fallbackHash, esFallback }
+ * Orden esperado: [INE, plan, presupuesto]
+ */
+export function parsearDocHash(docHash) {
+  if (!docHash) return { cids: [], fallbackHash: null, esFallback: false };
+  const partes = docHash.split("|").map(s => s.trim()).filter(Boolean);
+  if (partes.length > 1 || esCID(partes[0])) {
+    return { cids: partes, fallbackHash: null, esFallback: false };
+  }
+  return { cids: [], fallbackHash: partes[0] ?? null, esFallback: true };
+}

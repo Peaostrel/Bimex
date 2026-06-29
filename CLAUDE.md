@@ -30,7 +30,7 @@ scripts/                → Scripts de deploy y prueba
 - `VITE_RPC_URL` — https://soroban-testnet.stellar.org
 - `VITE_TOKEN_MXNE` — dirección token MXNe
 - `VITE_ADMIN_ADDRESS` — wallet admin
-- `VITE_FAUCET_SECRET` — faucet testnet
+- `FAUCET_SECRET` (backend) — faucet testnet secret key, never VITE_ prefixed
 - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — notificaciones
 - `VITE_PINATA_API_KEY` / `VITE_PINATA_SECRET` — IPFS (opcional, fallback SHA-256)
 

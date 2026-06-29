@@ -91,7 +91,9 @@ export default function Recompensas({ direccion, refrescar, totalInvertido: tota
   useEffect(() => {
     if (totalInvertidoProp != null) {
       const b = typeof totalInvertidoProp === "bigint" ? totalInvertidoProp : BigInt(totalInvertidoProp ?? 0);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTotalMXNe(Number(b / BigInt(10_000_000)) + Number(b % BigInt(10_000_000)) / 10_000_000);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCargando(false);
       return;
     }

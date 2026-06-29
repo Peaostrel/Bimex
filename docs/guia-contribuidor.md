@@ -73,10 +73,11 @@ Tú depositas 1,000 MXNe
 
 ### 5. Retira tu principal
 
-Puedes retirar tu capital original **en cualquier momento** una vez que el proyecto esté en estado **Liberado** o **Abandonado**:
+Tu dinero no está bloqueado — puedes retirar tu capital original **en cualquier momento que lo desees**, sin plazos forzosos:
 
-- Entra al detalle del proyecto
-- Haz clic en **"Retirar principal"**
+- Entra a la sección **"Mi Inversión"** en el detalle del proyecto
+- Haz clic en **"Retirar capital"**
+- Confirma el monto exacto a recuperar (si retiras de forma anticipada, te informaremos con total transparencia el rendimiento que el proyecto dejará de recibir)
 - Confirma en Freighter
 - Los MXNe regresan a tu wallet inmediatamente
 
@@ -85,13 +86,10 @@ Puedes retirar tu capital original **en cualquier momento** una vez que el proye
 ## Seguridad y preguntas frecuentes
 
 **¿Puedo perder mi dinero?**
-No. El contrato inteligente garantiza que tu principal siempre es recuperable. El código es público y auditable en la blockchain de Stellar.
+No. El contrato inteligente garantiza que tu principal siempre es recuperable al 100%. El código es público y auditable en la blockchain de Stellar.
 
-**¿Qué pasa si el proyecto fracasa o es abandonado?**
-Si el dueño del proyecto lo marca como Abandonado, puedes retirar tu principal completo en ese momento. No hay penalización.
-
-**¿Qué pasa si el proyecto nunca alcanza su meta?**
-Puedes retirar tu principal en cualquier momento si el proyecto está en estado Liberado o Abandonado. Si el proyecto sigue activo (EnProgreso), el dueño puede decidir abandonarlo para liberar los fondos.
+**¿Qué pasa si necesito mi dinero antes de que el proyecto termine?**
+Puedes retirarlo cuando quieras. Bajo nuestra política de liquidez inmediata, no estás atrapado. Retirar antes de tiempo no tiene ninguna penalización sobre tu capital; únicamente detiene la generación de rendimiento para el proyecto social.
 
 **¿Quién controla el contrato?**
 El contrato es inmutable una vez desplegado. Nadie puede mover tu principal sin tu autorización. El admin solo puede aprobar o rechazar proyectos nuevos.

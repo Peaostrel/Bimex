@@ -23,11 +23,10 @@ export default function usePaginacionLocal(datos, dependencias = []) {
     return datos.slice(desde, desde + PAGINA_SIZE);
   }, [datos, pagina]);
 
-  useEffect(() => {
-    if (totalPaginas > 0 && pagina >= totalPaginas) {
-      setPagina(Math.max(0, totalPaginas - 1));
-    }
-  }, [totalPaginas, pagina]);
+  // Derived state during render: clamp page when data shrinks
+  if (totalPaginas > 0 && pagina >= totalPaginas) {
+    setPagina(Math.max(0, totalPaginas - 1));
+  }
 
   return { datosPagina, pagina, setPagina, totalPaginas, total };
 }

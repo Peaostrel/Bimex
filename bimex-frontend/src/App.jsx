@@ -5,12 +5,14 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-
 import ConectarWallet   from "./components/ConectarWallet";
 import ListaProyectos   from "./components/ListaProyectos";
 import DetalleProyecto  from "./components/DetalleProyecto";
+import CasosDeExito     from "./components/CasosDeExito";
 import MiCuenta         from "./components/MiCuenta";
 import Changelog        from "./components/Changelog";
 import Terminos         from "./components/Terminos";
 import Privacidad       from "./components/Privacidad";
 import OnboardingTour from "./components/OnboardingTour";
 import SimuladorImpacto from "./components/SimuladorImpacto";
+import AuditoriaBadge from "./components/AuditoriaBadge";
 import { shouldShowTour } from "./utils/onboardingUtils";
 import { getStorage }   from "./utils/storage";
 import { parsearError } from "./utils/errores";
@@ -110,8 +112,8 @@ function LogoSVG({ size = 36, light = false }) {
 // ── Datos estáticos de landing ──────────────────────────────────────────────
 const FEATURES = [
   {
-    titulo: "Tu capital siempre es recuperable",
-    desc: "Tu MXNe entra al smart contract y permanece ahí, protegido por código. Cuando el proyecto concluye, recuperas exactamente lo que aportaste.",
+    titulo: "Tu dinero no está bloqueado — puedes retirarlo cuando quieras",
+    desc: "Tu MXNe entra al smart contract y permanece disponible para ti. Puedes retirar el 100% de tu dinero en cualquier momento que lo desees, sin plazos forzosos ni penalizaciones.",
     color: "#1E3A5F", bg: "rgba(30,58,95,0.05)", border: "rgba(30,58,95,0.12)",
   },
   {
@@ -336,6 +338,7 @@ export default function App() {
   const esRutaProyectos = pathname === "/" || pathname === "/proyectos" || pathname.startsWith("/proyectos/");
   const esRutaCuenta = pathname === "/cuenta";
   const esRutaTransparencia = pathname === "/transparencia";
+  const esRutaImpacto = pathname === "/impacto";
 
   function formatearDir(dir) {
     if (!dir) return "";
@@ -489,6 +492,18 @@ export default function App() {
               >
                 {t("nav.transparency")}
               </button>
+              <button
+                type="button"
+                onClick={() => navigate("/impacto")}
+                style={{
+                  ...st.navTab,
+                  color: esRutaImpacto ? "var(--navy)" : "var(--muted)",
+                  borderBottom: esRutaImpacto ? "2px solid var(--navy)" : "2px solid transparent",
+                }}
+                aria-current={esRutaImpacto ? "page" : undefined}
+              >
+                {t("nav.impact")}
+              </button>
             </div>
           </div>
 
@@ -606,6 +621,7 @@ export default function App() {
               </Suspense>
             }
           />
+          <Route path="/impacto" element={<CasosDeExito />} />
           <Route path="/novedades" element={<div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)" }}><button type="button" className="btn btn-ghost" onClick={() => navigate(direccion ? "/proyectos" : "/")} style={{ fontSize: "0.84rem" }}>← Volver</button><Changelog /></div>} />
           <Route path="/terminos" element={<Terminos onVolver={() => navigate(direccion ? "/proyectos" : "/")} />} />
           <Route path="/privacidad" element={<Privacidad onVolver={() => navigate(direccion ? "/proyectos" : "/")} />} />
@@ -721,7 +737,10 @@ function Landing({ autoConectar, onConectado, onTransparencia, onChangelog, onTe
           <div>
             <div style={st.heroBadge}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--green)", display: "inline-block" }} />
-              Capital siempre recuperable
+              Tu dinero no está bloqueado — puedes retirarlo cuando quieras
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <AuditoriaBadge variant="compact" />
             </div>
             <h1 id="hero-titulo" style={st.heroH1}>
               Invierte. Impacta.<br />

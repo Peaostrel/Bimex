@@ -116,6 +116,37 @@ describe("DetalleProyecto", () => {
     expect(screen.getByText("$1,260 MXN")).toBeInTheDocument();
   });
 
+  it("muestra el ramp y tutorial de SPEI cuando el balance es menor a 100 MXNe", async () => {
+    obtenerProyecto.mockResolvedValueOnce(proyecto());
+    obtenerBalanceMXNe.mockResolvedValueOnce(0n);
+
+    renderDetalle();
+
+    await screen.findByRole("heading", { name: "Huerto Comunitario", level: 1 });
+
+    expect(screen.getByText("¿No tienes MXNe? Consíguelos aquí")).toBeInTheDocument();
+    expect(screen.getByText("Completa el KYC directamente con Etherfuse.")).toBeInTheDocument();
+    expect(screen.getByText("Deposita MXN desde tu banco vía SPEI a la CLABE indicada.")).toBeInTheDocument();
+    expect(screen.getByText("Etherfuse envía MXNe directamente a tu wallet Stellar.")).toBeInTheDocument();
+    expect(screen.getByText("Regresa a Bimex y aporta MXNe al proyecto.")).toBeInTheDocument();
+    expect(screen.getByText(/Banco → SPEI → MXNe → Bimex/)).toBeInTheDocument();
+
+    const link = screen.getByRole("link", { name: /obtener aquí/i });
+    expect(link).toHaveAttribute("href", "https://app.etherfuse.com/ramp");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("usa fallback seguro si el balance MXNe viene null", async () => {
+    obtenerProyecto.mockResolvedValueOnce(proyecto());
+    obtenerBalanceMXNe.mockResolvedValueOnce(null);
+
+    renderDetalle();
+
+    await screen.findByRole("heading", { name: "Huerto Comunitario", level: 1 });
+
+    expect(screen.getByText("¿No tienes MXNe? Consíguelos aquí")).toBeInTheDocument();
+  });
+
   it("no permite contribuir cuando el proyecto ya está liberado", async () => {
     obtenerProyecto.mockResolvedValueOnce(proyecto({ estado: "Liberado" }));
 

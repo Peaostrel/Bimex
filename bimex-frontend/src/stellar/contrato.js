@@ -1,3 +1,4 @@
+
 import {
   Contract,
   rpc,
@@ -6,10 +7,15 @@ import {
   BASE_FEE,
   Address,
   Keypair,
+  Account,
+  Asset,
+  Operation,
+  Horizon,
   nativeToScVal,
   scValToNative,
 } from "@stellar/stellar-sdk";
-import { signTransaction } from "@stellar/freighter-api";
+import { PasskeyKit } from "passkey-kit";
+import { signWithWalletKit } from "./walletKit.js";
 import { formatearMXNe } from "../utils/formato.js";
 
 // ─── Configuración ────────────────────────────────────────────────────────────
@@ -26,6 +32,14 @@ export const CONFIG = {
     _isMainnet
       ? "CAPW7JXJ6H6SGJ5MVM25356FAYOVT3ICZUIZRT4KGZHLUNMTWNMUI3RM"  // MXNe Mainnet (issuer: brale.xyz)
       : "CDDIGHPVTW4PSCQCU67NQ4NXZ4NX5GDLNL3O67WT5RQ4GT6RXIEYPC4P"  // MXNe Testnet
+  ),
+  MXNE_ISSUER: import.meta.env.VITE_MXNE_ISSUER ?? (
+    _isMainnet
+      ? "GAGNDTCBZ2UH63SYGRZU22KHVQ6AEFX26HAKWT7A5MWVLBQDQT2R46LC"
+      : "GC6IME5MGROG3EYQL6I6DYH2V4GUFQNJAYAMWO2XBC4BREMTZB42JJWK"
+  ),
+  HORIZON_URL: import.meta.env.VITE_HORIZON_URL ?? (
+    _isMainnet ? "https://horizon.stellar.org" : "https://horizon-testnet.stellar.org"
   ),
   // Tasas reales en producción (bps): 945 = 9.45% CETES, 400 = 4% AMM
   // Tasas demo en testnet: 5000000 / 2000000 (~10 MXNe/min por 16K)
@@ -44,6 +58,33 @@ const servidor = new rpc.Server(CONFIG.RPC_URL, { allowHttp: false });
 // Cuenta ficticia para simulaciones de lectura (no necesita existir en la red)
 const CUENTA_DUMMY = Keypair.random().publicKey();
 
+export const passkeyKit = new PasskeyKit({
+  rpcUrl: CONFIG.RPC_URL,
+  networkPassphrase: CONFIG.NETWORK_PASSPHRASE,
+  walletWasmHash: import.meta.env.VITE_PASSKEY_WASM_HASH,
+});
+
+// Enviar TX vía Launchtube (gas sponsor)
+async function enviarPorLaunchtube(txXdrBase64) {
+  console.log("Enviando TX a Launchtube para fee sponsorship...", txXdrBase64);
+  const token = import.meta.env.VITE_LAUNCHTUBE_JWT || localStorage.getItem("launchtube_jwt") || "";
+  const url = import.meta.env.VITE_LAUNCHTUBE_URL || "https://testnet.launchtube.xyz";
+  const res = await fetch(`${url.replace(/\/$/, "")}/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ xdr: txXdrBase64 })
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Error en Launchtube: ${errorText}`);
+  }
+  const data = await res.json();
+  return { hash: data.hash || data.txHash || data.id };
+}
+
 // ─── Utilidades internas ──────────────────────────────────────────────────────
 
 function dirAScVal(direccion) {
@@ -56,11 +97,7 @@ async function simularLectura(metodo, args = []) {
   try {
     cuentaInfo = await servidor.getAccount(CUENTA_DUMMY);
   } catch {
-    cuentaInfo = {
-      accountId: () => CUENTA_DUMMY,
-      sequenceNumber: () => "0",
-      incrementSequenceNumber: () => {},
-    };
+    cuentaInfo = new Account(CUENTA_DUMMY, "0");
   }
 
   const tx = new TransactionBuilder(cuentaInfo, {
@@ -88,7 +125,14 @@ async function simularLectura(metodo, args = []) {
 
 async function construirTx(cuentaPublica, metodo, args = []) {
   const contrato = new Contract(CONFIG.CONTRACT_ID);
-  const cuentaInfo = await servidor.getAccount(cuentaPublica);
+  
+  let cuentaInfo;
+  try {
+    cuentaInfo = await servidor.getAccount(cuentaPublica);
+  } catch {
+    // Si la cuenta es un smart wallet y no está inicializada en red, simulamos
+    cuentaInfo = new Account(cuentaPublica, "0");
+  }
 
   const tx = new TransactionBuilder(cuentaInfo, {
     fee: "1000000",
@@ -102,44 +146,51 @@ async function construirTx(cuentaPublica, metodo, args = []) {
 }
 
 async function firmarYEnviar(txPreparada, cuentaPublica) {
-  const { signedTxXdr, error: errorFirma } = await signTransaction(
-    txPreparada.toXDR(),
-    { networkPassphrase: CONFIG.NETWORK_PASSPHRASE, address: cuentaPublica }
-  );
+  let envioHash;
 
-  if (errorFirma) {
-    throw new Error(`Freighter rechazó la firma: ${errorFirma?.message || JSON.stringify(errorFirma)}`);
-  }
-  if (!signedTxXdr) {
-    throw new Error("Freighter no devolvió una transacción firmada.");
-  }
+  if (cuentaPublica.startsWith("C")) {
+    const txFirmada = await passkeyKit.sign(txPreparada);
+    try {
+      const res = await enviarPorLaunchtube(txFirmada.toXDR());
+      envioHash = res.hash;
+    } catch (err) {
+      throw new Error(`Launchtube rechazó la transacción: ${err.message}`, { cause: err });
+    }
+  } else {
+    const signedTxXdr = await signWithWalletKit(txPreparada, cuentaPublica);
 
-  const txFirmada = TransactionBuilder.fromXDR(signedTxXdr, CONFIG.NETWORK_PASSPHRASE);
-  const envio = await servidor.sendTransaction(txFirmada);
+    if (!signedTxXdr) {
+      throw new Error("Wallet no devolvió una transacción firmada.");
+    }
 
-  if (envio.status === "ERROR") {
-    const motivo = envio.errorResult
-      ? envio.errorResult.toXDR("base64")
-      : "desconocido";
-    throw new Error(`La transacción fue rechazada por la red. Detalle: ${motivo}`);
-  }
+    const txFirmada = TransactionBuilder.fromXDR(signedTxXdr, CONFIG.NETWORK_PASSPHRASE);
+    const envio = await servidor.sendTransaction(txFirmada);
 
-  if (!envio.hash) {
-    throw new Error(`La red no aceptó la transacción (status: ${envio.status}). Intenta de nuevo.`);
+    if (envio.status === "ERROR") {
+      const motivo = envio.errorResult
+        ? envio.errorResult.toXDR("base64")
+        : "desconocido";
+      throw new Error(`La transacción fue rechazada por la red. Detalle: ${motivo}`);
+    }
+
+    if (!envio.hash) {
+      throw new Error(`La red no aceptó la transacción (status: ${envio.status}). Intenta de nuevo.`);
+    }
+    envioHash = envio.hash;
   }
 
   let intentos = 0;
   while (intentos < 20) {
     await new Promise((r) => setTimeout(r, 2000));
-    const estado = await servidor.getTransaction(envio.hash);
+    const estado = await servidor.getTransaction(envioHash);
     if (estado.status === rpc.Api.GetTransactionStatus.SUCCESS) return estado;
     if (estado.status === rpc.Api.GetTransactionStatus.FAILED) {
-      const xdrFallo = estado.resultXdr ? estado.resultXdr.toXDR("base64") : envio.hash;
+      const xdrFallo = estado.resultXdr ? estado.resultXdr.toXDR("base64") : envioHash;
       throw new Error(`La transacción falló en la red. XDR: ${xdrFallo}`);
     }
     intentos++;
   }
-  throw new Error(`Tiempo de espera agotado. Verifica la TX en el explorador: ${envio.hash}`);
+  throw new Error(`Tiempo de espera agotado. Verifica la TX en el explorador: ${envioHash}`);
 }
 
 // ─── Funciones de LECTURA ─────────────────────────────────────────────────────
@@ -376,6 +427,133 @@ export async function reclamarYield(direccion, idProyecto) {
 // ─── Faucet — TESTNET ONLY — delegates to indexer API ─────────────────────
 
 const FAUCET_API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+
+// ─── Trustline MXNe (cuentas clásicas G...) ───────────────────────────────────
+
+const RESERVA_XLM_POR_TRUSTLINE = 0.5;
+
+function esCuentaClasica(direccion) {
+  return typeof direccion === "string" && direccion.startsWith("G");
+}
+
+function cuentaTieneTrustlineMXNe(cuenta) {
+  return cuenta.balances.some(
+    (balance) =>
+      balance.asset_type !== "native" &&
+      balance.asset_code === "MXNE" &&
+      balance.asset_issuer === CONFIG.MXNE_ISSUER
+  );
+}
+
+function calcularXlmRequeridoParaTrustline(subentryCount = 0) {
+  const minActual = (2 + subentryCount) * RESERVA_XLM_POR_TRUSTLINE;
+  return minActual + RESERVA_XLM_POR_TRUSTLINE;
+}
+
+function obtenerBalanceNativo(cuenta) {
+  const nativo = cuenta.balances.find((balance) => balance.asset_type === "native");
+  return nativo ? parseFloat(nativo.balance) : 0;
+}
+
+async function cargarCuentaHorizon(direccion) {
+  const horizon = new Horizon.Server(CONFIG.HORIZON_URL);
+  try {
+    return await horizon.loadAccount(direccion);
+  } catch (err) {
+    if (err?.response?.status === 404) return null;
+    throw err;
+  }
+}
+
+/** Consulta Horizon para saber si la cuenta ya tiene trustline al asset MXNe. */
+export async function tieneTrustlineMXNe(direccion) {
+  if (!esCuentaClasica(direccion)) return true;
+
+  const cuenta = await cargarCuentaHorizon(direccion);
+  if (!cuenta) return false;
+  return cuentaTieneTrustlineMXNe(cuenta);
+}
+
+/** Estado detallado para la UI de trustline (XLM, existencia de cuenta, etc.). */
+export async function obtenerEstadoTrustlineMXNe(direccion) {
+  if (!esCuentaClasica(direccion)) {
+    return {
+      aplica: false,
+      tieneTrustline: true,
+      cuentaExiste: true,
+      xlmSuficiente: true,
+      balanceXlm: null,
+      xlmRequerido: null,
+    };
+  }
+
+  const cuenta = await cargarCuentaHorizon(direccion);
+  if (!cuenta) {
+    return {
+      aplica: true,
+      tieneTrustline: false,
+      cuentaExiste: false,
+      xlmSuficiente: false,
+      balanceXlm: 0,
+      xlmRequerido: calcularXlmRequeridoParaTrustline(0),
+    };
+  }
+
+  const tieneTrustline = cuentaTieneTrustlineMXNe(cuenta);
+  const balanceXlm = obtenerBalanceNativo(cuenta);
+  const xlmRequerido = calcularXlmRequeridoParaTrustline(cuenta.subentry_count ?? 0);
+
+  return {
+    aplica: true,
+    tieneTrustline,
+    cuentaExiste: true,
+    xlmSuficiente: balanceXlm >= xlmRequerido,
+    balanceXlm,
+    xlmRequerido,
+  };
+}
+
+/** Construye, firma y envía changeTrust para habilitar MXNe en la cuenta del usuario. */
+export async function crearTrustlineMXNe(direccion) {
+  if (!esCuentaClasica(direccion)) {
+    throw new Error("Las Smart Wallets no usan trustlines clásicas.");
+  }
+
+  const estado = await obtenerEstadoTrustlineMXNe(direccion);
+  if (estado.tieneTrustline) return { yaExistia: true };
+  if (!estado.cuentaExiste) {
+    throw new Error("op_no_account");
+  }
+  if (!estado.xlmSuficiente) {
+    throw new Error("op_underfunded");
+  }
+
+  const horizon = new Horizon.Server(CONFIG.HORIZON_URL);
+  const cuenta = await horizon.loadAccount(direccion);
+  const asset = new Asset("MXNE", CONFIG.MXNE_ISSUER);
+
+  const tx = new TransactionBuilder(cuenta, {
+    fee: BASE_FEE,
+    networkPassphrase: CONFIG.NETWORK_PASSPHRASE,
+  })
+    .addOperation(Operation.changeTrust({ asset, limit: "922337203685.4775807" }))
+    .setTimeout(300)
+    .build();
+
+  const signedTxXdr = await signWithWalletKit(tx, direccion);
+
+  if (!signedTxXdr) {
+    throw new Error("Wallet no devolvió una transacción firmada.");
+  }
+
+  const txFirmada = TransactionBuilder.fromXDR(signedTxXdr, CONFIG.NETWORK_PASSPHRASE);
+  const resultado = await horizon.submitTransaction(txFirmada);
+  return { yaExistia: false, hash: resultado.hash };
+}
+
+export function urlFriendbot(direccion) {
+  return `https://friendbot.stellar.org?addr=${encodeURIComponent(direccion)}`;
+}
 
 export async function mintearMXNePrueba(direccionDestino) {
   if (CONFIG.NETWORK_PASSPHRASE !== Networks.TESTNET) {

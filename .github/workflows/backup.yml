@@ -1,0 +1,52 @@
+name: Daily Database Backup
+
+on:
+  schedule:
+    # Daily at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    name: Backup Supabase to R2
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client gnupg awscli
+          gpg --version
+          psql --version
+          aws --version
+
+      - name: Import GPG public key
+        env:
+          GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
+        run: |
+          echo "${GPG_PUBLIC_KEY}" | gpg --batch --yes --import
+          gpg --list-keys
+
+      - name: Run backup
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          GPG_RECIPIENT: ${{ secrets.GPG_RECIPIENT }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_REGION: auto
+        run: |
+          bash scripts/backup-db.sh
+
+      - name: Upload backup log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backup-failure-log
+          path: /tmp/backup-db-*.log
+          retention-days: 7

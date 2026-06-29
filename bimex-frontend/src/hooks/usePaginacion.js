@@ -10,12 +10,14 @@ export default function usePaginacion(consultaFn, dependencias = []) {
 
   // Resetear a página 0 al cambiar dependencias
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPagina(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencias);
 
   useEffect(() => {
     let activo = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCargando(true);
     const desde = pagina * PAGINA_SIZE;
     const hasta = desde + PAGINA_SIZE - 1;

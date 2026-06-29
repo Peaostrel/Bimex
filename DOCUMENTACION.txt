@@ -519,9 +519,8 @@ VITE_RPC_URL
 VITE_ADMIN_ADDRESS
   Dirección pública (G...) del administrador. Controla acceso a AdminPanel.
 
-VITE_FAUCET_SECRET  (opcional, solo desarrollo)
-  Secret key del faucet de MXNe para testing.
-  NUNCA exponer en producción ni commitear.
+FAUCET_SECRET (backend, bimex-indexer/.env.example)
+  Secret key del faucet de MXNe para testing. Solo existe en el backend (NUNCA VITE_FAUCET_SECRET).
 
 ================================================================================
 10. VALIDACIONES Y MANEJO DE ERRORES
@@ -700,8 +699,36 @@ CONTRATO TESTNET (referencia):
   https://stellar.expert/explorer/testnet/contract/CAEYEIIH4MHXDVEBAPNGV2LJ7DAO4JSVBIN3E3I6TBK56AMRWERNRM3B
 
 ================================================================================
+13. SMART WALLETS (PASSKEYS) Y LAUNCHTUBE (Issue #134)
+================================================================================
+
+Bimex integra Smart Wallets usando WebAuthn (Passkeys) a través de `@stellar/passkey-kit`,
+permitiendo onboarding sin fricción (Face ID / Touch ID) sin requerir extensiones.
+
+CARACTERÍSTICAS:
+  - Registro e inicio de sesión biométrico.
+  - La cuenta resultante es un contrato inteligente (Smart Wallet) que delega la
+    firma de autorización a la llave biométrica local.
+  - Las operaciones no requieren saldo XLM, ya que las comisiones son patrocinadas
+    por el servicio Launchtube usando FeeBumpTransactions.
+
+CONFIGURACIÓN:
+  - passkeyKit se inicializa en `src/stellar/contrato.js`.
+  - Cuando se firma una transacción de una cuenta que inicia con "C" (Smart Wallet),
+    se utiliza `passkeyKit.sign()` y el XDR se envía vía POST a `https://testnet.launchtube.xyz/`.
+
+LIMITACIONES ACTUALES Y RECUPERACIÓN:
+  - Launchtube se encuentra limitado a Testnet.
+  - Trustlines nativas pueden requerir configuración especial si el Token MXNe SAC
+    se implementa con reglas restrictivas para contratos.
+  - Recuperación de la cuenta: Al estar basado en WebAuthn, las credenciales se
+    sincronizan a través de Apple iCloud Keychain o Google Password Manager. 
+    Se recomienda a los usuarios no perder el acceso a su cuenta en la nube, ya que
+    actualmente no se implementa un esquema de recuperación multi-firma secundario.
+
+================================================================================
 FIN DE DOCUMENTACIÓN
 ================================================================================
 
-Versión: 2.0
-Fecha: 2026-04-23
+Versión: 2.1
+Fecha: 2026-06-23

@@ -6,6 +6,9 @@ const TOPIC_TO_EVENT = {
   retiro:     'retiro_principal',
   aprobar:    'cambio_estado',
   rechazar:   'cambio_estado',
+  pausar:     'admin_action',
+  reanudar:   'admin_action',
+  upgrade:    'admin_action',
 };
 
 function normalizeArg(arg) {
@@ -59,6 +62,7 @@ function parseEventRecord(event, contractId) {
 
   let proyecto = null;
   let aportacion = null;
+  let audit = null;
 
   if (topic === 'contribuir') {
     aportacion = {
@@ -82,11 +86,21 @@ function parseEventRecord(event, contractId) {
     };
   } else if (topic === 'aprobar') {
     proyecto = { id: Number(args[0]), estado: 'EtapaInicial' };
+    audit = { action: 'aprobar', actor_address: String(actor), target: `proyecto_${args[0]}`, metadata: {}, tx_hash: evento.tx_hash, block_time: timestamp };
   } else if (topic === 'rechazar') {
     proyecto = { id: Number(args[0]), estado: 'Rechazado', motivo_rechazo: String(args[1]) };
+    audit = { action: 'rechazar', actor_address: String(actor), target: `proyecto_${args[0]}`, metadata: { motivo: String(args[1]) }, tx_hash: evento.tx_hash, block_time: timestamp };
+  } else if (topic === 'pausar') {
+    audit = { action: 'pausar', actor_address: String(actor), target: 'contract', metadata: {}, tx_hash: evento.tx_hash, block_time: timestamp };
+  } else if (topic === 'reanudar') {
+    audit = { action: 'reanudar', actor_address: String(actor), target: 'contract', metadata: {}, tx_hash: evento.tx_hash, block_time: timestamp };
+  } else if (topic === 'upgrade') {
+    let wasm_hash = args[0];
+    if (wasm_hash && wasm_hash.toString) wasm_hash = wasm_hash.toString('hex');
+    audit = { action: 'upgrade', actor_address: String(actor), target: 'contract', metadata: { new_wasm_hash: String(wasm_hash) }, tx_hash: evento.tx_hash, block_time: timestamp };
   }
 
-  return { evento, proyecto, aportacion };
+  return { evento, proyecto, aportacion, audit };
 }
 
 export function parseEvent(event, contractId) {

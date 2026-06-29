@@ -464,10 +464,12 @@ impl BimexContrato {
              proyecto.estado == EstadoProyecto::EnProgreso);
 
         assert!(
-            proyecto.estado == EstadoProyecto::Liberado  ||
-            proyecto.estado == EstadoProyecto::Abandonado ||
+            proyecto.estado == EstadoProyecto::EtapaInicial ||
+            proyecto.estado == EstadoProyecto::EnProgreso   ||
+            proyecto.estado == EstadoProyecto::Liberado     ||
+            proyecto.estado == EstadoProyecto::Abandonado   ||
             plazo_vencido,
-            "Solo puedes retirar cuando el proyecto este liberado, abandonado o haya vencido el plazo"
+            "Solo puedes retirar cuando el proyecto este activo, liberado, abandonado o haya vencido el plazo"
         );
 
         let aportacion: Aportacion = env
@@ -521,6 +523,7 @@ impl BimexContrato {
     /// `retirar_principal` en ese caso) ni si el proyecto ya está Liberado
     /// o Abandonado.
     pub fn retiro_anticipado(env: Env, backer: Address, id_proyecto: u32) -> i128 {
+        verificar_no_pausado(&env);
         // AUTH FIRST
         backer.require_auth();
 
@@ -564,6 +567,12 @@ impl BimexContrato {
         }
 
         env.storage().persistent().set(&Clave::Proyecto(id_proyecto), &proyecto);
+
+        #[allow(deprecated)]
+        env.events().publish(
+            (symbol_short!("retiro"), backer.clone()),
+            (id_proyecto, monto, ahora),
+        );
 
         // INTERACTION last — devolver solo capital
         let token_mxne: Address = env.storage().instance().get(&Clave::TokenMXNe).unwrap();
@@ -730,6 +739,12 @@ impl BimexContrato {
         let admin_guardado: Address = env.storage().instance().get(&Clave::Admin).expect("No inicializado");
         assert!(admin == admin_guardado, "Solo el admin puede pausar");
         env.storage().instance().set(&Clave::Pausado, &true);
+
+        #[allow(deprecated)]
+        env.events().publish(
+            (symbol_short!("pausar"), admin.clone()),
+            env.ledger().timestamp(),
+        );
     }
 
     pub fn admin_reanudar(env: Env, admin: Address) {
@@ -737,6 +752,12 @@ impl BimexContrato {
         let admin_guardado: Address = env.storage().instance().get(&Clave::Admin).expect("No inicializado");
         assert!(admin == admin_guardado, "Solo el admin puede reanudar");
         env.storage().instance().set(&Clave::Pausado, &false);
+
+        #[allow(deprecated)]
+        env.events().publish(
+            (symbol_short!("reanudar"), admin.clone()),
+            env.ledger().timestamp(),
+        );
     }
 
     /// Actualiza el WASM del contrato. Solo el admin puede ejecutar esta función.
@@ -745,6 +766,13 @@ impl BimexContrato {
         admin.require_auth();
         let admin_guardado: Address = env.storage().instance().get(&Clave::Admin).expect("No inicializado");
         assert!(admin == admin_guardado, "Solo el admin puede actualizar el contrato");
+
+        #[allow(deprecated)]
+        env.events().publish(
+            (symbol_short!("upgrade"), admin.clone()),
+            (new_wasm_hash.clone(), env.ledger().timestamp()),
+        );
+
         // In tests, update_current_contract_wasm cannot be called because no real
         // WASM is stored in the test ledger (contracts are registered as Rust structs).
         // The auth check above is still fully verified.

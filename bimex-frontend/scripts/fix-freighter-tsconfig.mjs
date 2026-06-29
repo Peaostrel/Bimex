@@ -60,7 +60,20 @@ function ensureNodeModulesBaseTsconfig() {
   writeJson(nodeModulesTsconfigPath, base);
 }
 
+function patchStellarSdk() {
+  const configPath = path.join(root, "node_modules", "@stellar", "stellar-sdk", "lib", "minimal", "bindings", "config.js");
+  if (fs.existsSync(configPath)) {
+    let content = fs.readFileSync(configPath, "utf8");
+    if (content.includes('require("../../package.json")')) {
+      content = content.replace(/require\("\.\.\/\.\.\/package\.json"\)/g, '{ version: "14.6.1" }');
+      fs.writeFileSync(configPath, content, "utf8");
+    }
+  }
+}
+
 patchFreighterTsconfig();
 ensureNodeModulesBaseTsconfig();
+patchStellarSdk();
 
-console.log("[postinstall] Applied Freighter tsconfig compatibility patch");
+console.log("[postinstall] Applied compatibility patches");
+

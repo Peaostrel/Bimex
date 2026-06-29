@@ -71,10 +71,43 @@ BACKUP_DIR=./backups  # Directorio de backups (default: ./backups)
 0 2 * * * cd /path/to/bimex-indexer && bash scripts/backup.sh >> logs/backup.log 2>&1
 ```
 
+### 📊 reporteMensual.js - Reporte Mensual para Contribuidores
+
+Genera y envía reportes mensuales de impacto a contribuidores activos.
+Procesa yield on-chain, genera correos personalizados y respeta preferencias de notificación.
+
+**Uso**:
+```bash
+# Ejecución normal (procesa el mes anterior)
+node jobs/reporteMensual.js
+
+# Vista previa sin enviar
+node jobs/reporteMensual.js --dry-run
+
+# Forzar un período específico
+node jobs/reporteMensual.js --periodo 2026-05
+
+# Reducir concurrencia (modo conservador)
+node jobs/reporteMensual.js --concurrency 1
+```
+
+**Reporte automático con cron**:
+```bash
+# Primer día de cada mes a las 8:00 AM
+0 8 1 * * cd /path/to/bimex-indexer && node jobs/reporteMensual.js >> logs/reporte-mensual.log 2>&1
+
+# Con período explícito (si cron corre después del 1ro)
+0 9 2 * * cd /path/to/bimex-indexer && node jobs/reporteMensual.js --periodo $(date -d '1 month ago' +\%Y-\%m) >> logs/reporte-mensual.log 2>&1
+```
+
+**Dependencias**: `RESEND_API_KEY` en `.env`
+
 **Requisitos**:
-- `curl` instalado
-- Variables `SUPABASE_URL` y `SUPABASE_KEY` en `.env`
-- `jq` instalado (opcional, para contar registros)
+- Variables `SUPABASE_URL`, `SUPABASE_KEY`, y `RESEND_API_KEY` en `.env`
+- Base de datos migrada con `migration_reporte_mensual.sql`
+- Tabla `user_notifications` poblada (desde la UI de MiCuenta)
+
+---
 
 ---
 

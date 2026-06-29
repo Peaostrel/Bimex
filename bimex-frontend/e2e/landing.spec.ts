@@ -11,8 +11,8 @@ test.describe('Landing – sin wallet', () => {
     await page.goto('/')
   })
 
-  test('muestra el botón "Conectar con Freighter" en el hero', async ({ page }) => {
-    const heroBtn = page.getByRole('button', { name: /conectar con freighter/i }).first()
+  test('muestra el botón "Freighter" en el hero', async ({ page }) => {
+    const heroBtn = page.getByRole('button', { name: /freighter/i }).first()
     await expect(heroBtn).toBeVisible()
   })
 
